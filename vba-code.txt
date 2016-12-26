@@ -1,0 +1,422 @@
+' Project management work in VBA (microsoft project 2016).
+' Project Management and Entrepreneurship (GPE)
+' 2016,  University of Aveiro
+' Diogo Cunha
+' Rui Oliveira ruipedrooliveira@ua.pt
+
+
+Public Const NR_STUDENTS = 20
+
+
+Sub main_ex2_1()
+
+    Dim name_arr(NR_STUDENTS - 1) As String
+    Dim start_arr(NR_STUDENTS - 1) As String
+    Dim finish_arr(NR_STUDENTS - 1) As String
+    Dim duration_arr(NR_STUDENTS - 1) As String
+    Dim costs_arr(NR_STUDENTS - 1) As String
+    Dim nrModules_arr(NR_STUDENTS - 1) As Integer
+    
+    For I = 1 To NR_STUDENTS
+        Dim P As Project
+        Call generateForStudent(P, "Student_" & I)
+        
+        name_arr(I - 1) = P.Tasks(1).name
+        start_arr(I - 1) = P.Tasks(1).start
+        finish_arr(I - 1) = P.Tasks(1).finish
+        duration_arr(I - 1) = P.Tasks(1).duration / 480
+        nrModules_arr(I - 1) = P.Tasks.Count - 1
+        
+        costTask = 0
+        For j = 2 To P.Tasks.Count
+            costTask = costTask + P.Tasks(j).Cost1
+        Next j
+        costs_arr(I - 1) = costTask
+    
+    Next I
+    
+    Call exportInfoToExcel(NR_STUDENTS, nrModules_arr, name_arr, start_arr, finish_arr, duration_arr, costs_arr)
+    
+End Sub
+
+Sub main_ex2()
+    Dim P As Project
+    Call generateForStudent(P, "Adam Smith")
+    Call exportInfoOneToExcel(P)
+
+End Sub
+
+Sub generateForStudent(P As Project, name As String)
+    Set P = ActiveProject
+    ' Call CleanProject(P)
+    Call init(P)
+    Call randomActivities(P)
+    Call activityWithPrecedence(P)
+    Call aggregatingActivity(P, name)
+    Call SetResources(P)
+    Call CalculateCosts(P)
+
+End Sub
+
+
+Sub randomActivities(P As Project)
+
+    Dim durations(20) As Integer
+    
+    durations(0) = 32 * 480
+    For I = 1 To 4
+        durations(I) = durations(I - 1) / 2
+    Next I
+    durations(5) = 3 * 480
+    For I = 6 To 9
+        durations(I) = durations(I - 1) + 2 * 480
+    Next I
+    N = 2
+    For I = 10 To 14
+        durations(I) = (((N * (N - 1)) / 2) + 1) * 480
+        N = N + 1
+    Next I
+    j = 0
+    For I = 15 To 19
+        durations(I) = (2 ^ j) * 480
+        j = j + 1
+    Next I
+    V = Int((5 - 1 + 1) * Rnd() + 1)
+    cont = 1
+    For I = V To 5
+        P.Tasks.Add name:=Chr(86) & Chr(48 + I)
+        P.Tasks(cont).duration = durations(-1 + I)
+        P.Tasks(cont).Estimated = 0
+        P.Tasks(cont).Manual = 0
+        cont = cont + 1
+    Next I
+    
+    C = Int((5 - 1 + 1) * Rnd() + 1)
+    
+    If C = 5 Then
+        P.Tasks.Add name:="C4"
+        P.Tasks(cont).duration = 9
+        P.Tasks(cont).Estimated = 0
+        P.Tasks(cont).Manual = 0
+    End If
+    
+    For I = C To 5
+        P.Tasks.Add name:=Chr(67) & Chr(48 + I)
+        P.Tasks(cont).duration = durations(4 + I)
+        P.Tasks(cont).Estimated = 0
+        P.Tasks(cont).Manual = 0
+        cont = cont + 1
+    Next I
+    
+    L = Int((5 - 1 + 1) * Rnd() + 1)
+    For I = L To 5
+        P.Tasks.Add name:=Chr(76) & Chr(48 + I)
+        P.Tasks(cont).duration = durations(9 + I)
+        P.Tasks(cont).Estimated = 0
+        P.Tasks(cont).Manual = 0
+        cont = cont + 1
+    Next I
+    
+    E = Int((5 - 1 + 1) * Rnd() + 1)
+    For I = E To 5
+        P.Tasks.Add name:=Chr(69) & Chr(48 + I)
+        P.Tasks(cont).duration = durations(14 + I)
+        P.Tasks(cont).Estimated = 0
+        P.Tasks(cont).Manual = 0
+        cont = cont + 1
+    Next I
+
+End Sub
+
+
+Sub CleanProject(P As Project)
+    With P.Tasks.Application
+    .SelectAll
+    .RowDelete
+    End With
+End Sub
+
+
+Sub aggregatingActivity(P As Project, name As String)
+    SelectRow Row:=1, RowRelative:=False, Height:=0, Add:=False
+    Application.InsertManualTask
+    P.Tasks(1).name = name
+    P.Tasks(1).Manual = 0
+    SelectRow Row:=2, RowRelative:=False, Height:=P.Tasks.Count - 2, Add:=False
+    OutlineIndent
+End Sub
+
+
+Sub init(P As Project)
+    init_date = "31/07/2017"
+    P.ProjectStart = init_date
+    Application.ViewApplyEx "Gráfico &Gantt"
+    With P.Application
+        .OptionsCalendar HoursPerDay:=8
+        .OptionsCalendar StartTime:="9:00", FinishTime:="17:00"
+        .OptionsCalendar HoursPerWeek:=8 * 5
+    End With
+    P.Tasks.Application.SelectAll
+    Application.RowDelete
+    Rem MsgBox "O projeto começa em: " + Chr(13) + Str(P.ProjectStart)
+End Sub
+
+
+Sub activityWithPrecedence(P As Project)
+Dim I As Integer
+For I = 2 To P.Tasks.Count
+    If P.Tasks(I).name = "V5" Or P.Tasks(I - 1).name = "V5" Then
+        V5 = I
+    End If
+    If P.Tasks(I).name = Chr(86) & Chr(48 + 5) Then
+        V5 = I
+    End If
+    If P.Tasks(I).name = Chr(67) & Chr(48 + 4) Then
+        C4 = I
+    End If
+    If P.Tasks(I).name = Chr(76) & Chr(48 + 5) Then
+        L5 = I
+    End If
+    
+    If P.Tasks(I).name = Chr(67) & Chr(48 + 5) Then
+         P.Tasks(I).Predecessors = I - 1 & ";" & V5 & ""
+    ElseIf P.Tasks(I).name = Chr(69) & Chr(48 + 5) Then
+        P.Tasks(I).Predecessors = I - 1 & ";" & V5 & ";" & C4 & ";" & L5
+    Else
+        P.Tasks(I).Predecessors = I - 1
+    End If
+    
+Next I
+End Sub
+
+
+' not used
+Sub totalActivitiesName(P As Project)
+    For I = 1 To 5
+        P.Tasks.Add name:=Chr(86) & Chr(48 + I)
+    Next I
+    For I = 1 To 5
+        P.Tasks.Add name:=Chr(67) & Chr(48 + I)
+    Next I
+    For I = 1 To 5
+        P.Tasks.Add name:=Chr(76) & Chr(48 + I)
+    Next I
+    For I = 1 To 5
+        P.Tasks.Add name:=Chr(69) & Chr(48 + I)
+    Next I
+End Sub
+
+'not used
+Sub totalActivitiesDuration()
+    Dim P As Project
+    Set P = ActiveProject
+    
+    For I = 1 To 20
+        P.Tasks(I).Estimated = 0
+        P.Tasks(I).Manual = 0
+    Next I
+    
+    P.Tasks(1).duration = 32 * 480
+    For I = 2 To 5
+        P.Tasks(I).duration = P.Tasks(I - 1).duration / 2
+    Next I
+    
+    P.Tasks(6).duration = 3 * 480
+    For I = 7 To 10
+        P.Tasks(I).duration = P.Tasks(I - 1).duration + 2 * 480
+    Next I
+    
+    N = 2
+    For I = 11 To 15
+        P.Tasks(I).duration = (((N * (N - 1)) / 2) + 1) * 480
+        N = N + 1
+    Next I
+    
+    j = 0
+    For I = 16 To 20
+        P.Tasks(I).duration = (2 ^ j) * 480
+        j = j + 1
+    Next I
+End Sub
+
+'not used
+Sub totalActivitiesPrecedence()
+    Dim P As Project
+    Set P = ActiveProject
+    
+    P.Tasks(6).Predecessors = 1
+    
+    For I = 2 To 5
+        P.Tasks(I).Predecessors = I - 1
+    Next I
+    For I = 7 To 9
+        P.Tasks(I).Predecessors = I - 1
+    Next I
+    
+    For I = 12 To 15
+        P.Tasks(I).Predecessors = I - 1
+    Next I
+    
+    For I = 17 To 19
+        P.Tasks(I).Predecessors = I - 1
+    Next I
+    
+    P.Tasks(20).Predecessors = "19 ; 15 ; 5; 9"
+    
+    P.Tasks(10).Predecessors = "9"
+    P.Tasks(10).Predecessors = 5
+    
+    P.Tasks(11).Predecessors = 1
+    
+    P.Tasks(16).Predecessors = 11
+    
+End Sub
+
+'not used
+Sub contActivities()
+    Dim P As Project, T As Table
+    Set P = ActiveProject
+    Set T = P.TaskTables(1)
+    MsgBox T.name + Str(P.Tasks.Count)
+End Sub
+
+
+Sub SetResources(P As Project)
+    Dim T As Long
+    
+    For T = 2 To P.Tasks.Count
+        TaskName = P.Tasks(T).name
+        
+        If TaskName = "C3" Or TaskName = "C4" Or TaskName = "C5" Or TaskName = "E4" Or TaskName = "E5" Then
+            P.Tasks(T).ResourceNames = P.resources(1).name
+        End If
+        
+        If TaskName Like "V*" Or TaskName Like "L*" Then
+            P.Tasks(T).ResourceNames = P.resources(4).name
+        End If
+    Next T
+    
+End Sub
+
+
+Sub CalculateCosts(P As Project)
+    For I = 1 To P.Tasks.Count
+        P.Tasks(I).Cost1 = P.Tasks(I).Cost
+    Next I
+End Sub
+
+
+Sub exportInfoOneToExcel(P As Project)
+    Dim Exapp As Excel.Application, L As Workbook, R As Range
+    Set Exapp = CreateObject("Excel.application")
+    Rem Set Exapp = GetObject(, "Excel.Application")
+    With Exapp
+     .Visible = True
+     .WindowState = xlMaximized
+    End With
+    
+    Set L = Exapp.Workbooks.Add(1)
+    
+    Set R = L.ActiveSheet.Range("A1")
+    R = "Name"
+    Set R = L.ActiveSheet.Range("A2")
+    R = P.Tasks(1).name
+    
+    Set R = L.ActiveSheet.Range("B1")
+    R = "Start(date)"
+    Set R = L.ActiveSheet.Range("B2")
+    R = P.Tasks(1).start
+    
+    Set R = L.ActiveSheet.Range("C1")
+    R = "Finish(date)"
+    Set R = L.ActiveSheet.Range("C2")
+    R = P.Tasks(1).finish
+    
+    Set R = L.ActiveSheet.Range("D1")
+    R = "Duration(days)"
+    Set R = L.ActiveSheet.Range("D2")
+    R = P.Tasks(1).duration / 480
+    
+    Set R = L.ActiveSheet.Range("E1")
+    
+    R = "Costs(euros)"
+    Set R = L.ActiveSheet.Range("E2")
+
+    custo = 0
+    For I = 2 To P.Tasks.Count
+        custo = custo + P.Tasks(I).Cost1
+    Next I
+    R = custo
+    
+    Set R = L.ActiveSheet.Range("F1")
+    R = "Costs for student(euros)"
+    Set R = L.ActiveSheet.Range("F2")
+    R = 200 + P.Tasks.Count - 1 * 5
+    
+End Sub
+
+
+Sub exportInfoToExcel(nrAlunos As Integer, nrModules() As Integer, nome() As String, inicio() As String, fim() As String, duracao() As String, custos() As String)
+    Dim Exapp As Excel.Application, L As Workbook, R As Range
+    Set Exapp = CreateObject("Excel.application")
+    Rem Set Exapp = GetObject(, "Excel.Application")
+    With Exapp
+     .Visible = True
+     .WindowState = xlMaximized
+    End With
+    
+    Set L = Exapp.Workbooks.Add(1)
+    
+    Set R = L.ActiveSheet.Range("A1")
+    R = "Name"
+    
+    For I = 2 To nrAlunos + 1
+        Set R = L.ActiveSheet.Range("A" & CStr(I))
+        R = nome(I - 2)
+    Next I
+    
+    Set R = L.ActiveSheet.Range("B1")
+    R = "Start(date)"
+    
+    For I = 2 To nrAlunos + 1
+        Set R = L.ActiveSheet.Range("B" & CStr(I))
+        R = inicio(I - 2)
+    Next I
+    
+    Set R = L.ActiveSheet.Range("C1")
+    R = "Fished(date)"
+    
+    For I = 2 To nrAlunos + 1
+        Set R = L.ActiveSheet.Range("C" & CStr(I))
+        R = fim(I - 2)
+    Next I
+    
+    Set R = L.ActiveSheet.Range("D1")
+    R = "Duration(days)"
+    
+    For I = 2 To nrAlunos + 1
+        Set R = L.ActiveSheet.Range("D" & CStr(I))
+        R = duracao(I - 2)
+    Next I
+    
+    
+    Set R = L.ActiveSheet.Range("E1")
+    R = "Costs(euros)"
+    
+    For I = 2 To nrAlunos + 1
+        Set R = L.ActiveSheet.Range("E" & CStr(I))
+        R = custos(I - 2)
+    Next I
+
+    Set R = L.ActiveSheet.Range("F1")
+    R = "Costs for student(euros)"
+    
+    For I = 2 To nrAlunos + 1
+        Set R = L.ActiveSheet.Range("F" & CStr(I))
+        R = 200 + nrModules(I - 2) * 5
+    Next I
+    
+End Sub
+
+
+
