@@ -22,14 +22,14 @@ Sub main_ex2_1()
         Call generateForStudent(P, "Student_" & I)
         
         name_arr(I - 1) = P.Tasks(1).name
-        start_arr(I - 1) = P.Tasks(1).start
-        finish_arr(I - 1) = P.Tasks(1).finish
-        duration_arr(I - 1) = P.Tasks(1).duration / 480
+        start_arr(I - 1) = P.Tasks(1).Start
+        finish_arr(I - 1) = P.Tasks(1).Finish
+        duration_arr(I - 1) = P.Tasks(1).Duration / 240
         nrModules_arr(I - 1) = P.Tasks.Count - 1
         
         costTask = 0
         For j = 2 To P.Tasks.Count
-            costTask = costTask + P.Tasks(j).Cost1
+            costTask = costTask + P.Tasks(j).Cost
         Next j
         costs_arr(I - 1) = costTask
     
@@ -42,7 +42,7 @@ End Sub
 Sub main_ex2()
     Dim P As Project
     Call generateForStudent(P, "Adam Smith")
-    Call exportInfoOneToExcel(P)
+    'Call exportInfoOneToExcel(P)
 
 End Sub
 
@@ -54,7 +54,6 @@ Sub generateForStudent(P As Project, name As String)
     Call activityWithPrecedence(P)
     Call aggregatingActivity(P, name)
     Call SetResources(P)
-    Call CalculateCosts(P)
 
 End Sub
 
@@ -63,29 +62,29 @@ Sub randomActivities(P As Project)
 
     Dim durations(20) As Integer
     
-    durations(0) = 32 * 480
+    durations(0) = 32 * 240
     For I = 1 To 4
         durations(I) = durations(I - 1) / 2
     Next I
-    durations(5) = 3 * 480
+    durations(5) = 3 * 240
     For I = 6 To 9
-        durations(I) = durations(I - 1) + 2 * 480
+        durations(I) = durations(I - 1) + 2 * 240
     Next I
     N = 2
     For I = 10 To 14
-        durations(I) = (((N * (N - 1)) / 2) + 1) * 480
+        durations(I) = (((N * (N - 1)) / 2) + 1) * 240
         N = N + 1
     Next I
     j = 0
     For I = 15 To 19
-        durations(I) = (2 ^ j) * 480
+        durations(I) = (2 ^ j) * 240
         j = j + 1
     Next I
     V = Int((5 - 1 + 1) * Rnd() + 1)
     cont = 1
     For I = V To 5
         P.Tasks.Add name:=Chr(86) & Chr(48 + I)
-        P.Tasks(cont).duration = durations(-1 + I)
+        P.Tasks(cont).Duration = durations(-1 + I)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
         cont = cont + 1
@@ -95,14 +94,14 @@ Sub randomActivities(P As Project)
     
     If C = 5 Then
         P.Tasks.Add name:="C4"
-        P.Tasks(cont).duration = 9
+        P.Tasks(cont).Duration = durations(7)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
     End If
     
     For I = C To 5
         P.Tasks.Add name:=Chr(67) & Chr(48 + I)
-        P.Tasks(cont).duration = durations(4 + I)
+        P.Tasks(cont).Duration = durations(4 + I)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
         cont = cont + 1
@@ -111,16 +110,25 @@ Sub randomActivities(P As Project)
     L = Int((5 - 1 + 1) * Rnd() + 1)
     For I = L To 5
         P.Tasks.Add name:=Chr(76) & Chr(48 + I)
-        P.Tasks(cont).duration = durations(9 + I)
+        P.Tasks(cont).Duration = durations(9 + I)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
         cont = cont + 1
     Next I
     
     E = Int((5 - 1 + 1) * Rnd() + 1)
+    
+    If E = 5 Then
+        P.Tasks.Add name:="E4"
+        P.Tasks(cont).Duration = durations(17)
+        P.Tasks(cont).Estimated = 0
+        P.Tasks(cont).Manual = 0
+    End If
+    
+    
     For I = E To 5
         P.Tasks.Add name:=Chr(69) & Chr(48 + I)
-        P.Tasks(cont).duration = durations(14 + I)
+        P.Tasks(cont).Duration = durations(14 + I)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
         cont = cont + 1
@@ -148,13 +156,17 @@ End Sub
 
 
 Sub init(P As Project)
-    init_date = "31/07/2017"
+    Dim day As Integer
+    day = Int((30 - 1 + 1) * Rnd() + 1)
+    
+    init_date = CStr(day) + "/4/2017"
+    
     P.ProjectStart = init_date
     Application.ViewApplyEx "Gráfico &Gantt"
     With P.Application
-        .OptionsCalendar HoursPerDay:=8
-        .OptionsCalendar StartTime:="9:00", FinishTime:="17:00"
-        .OptionsCalendar HoursPerWeek:=8 * 5
+        .OptionsCalendar HoursPerDay:=4
+        .OptionsCalendar StartTime:="18:00", FinishTime:="22:00"
+        .OptionsCalendar HoursPerWeek:=4 * 5
     End With
     P.Tasks.Application.SelectAll
     Application.RowDelete
@@ -216,25 +228,25 @@ Sub totalActivitiesDuration()
         P.Tasks(I).Manual = 0
     Next I
     
-    P.Tasks(1).duration = 32 * 480
+    P.Tasks(1).Duration = 32 * 240
     For I = 2 To 5
-        P.Tasks(I).duration = P.Tasks(I - 1).duration / 2
+        P.Tasks(I).Duration = P.Tasks(I - 1).Duration / 2
     Next I
     
-    P.Tasks(6).duration = 3 * 480
+    P.Tasks(6).Duration = 3 * 240
     For I = 7 To 10
-        P.Tasks(I).duration = P.Tasks(I - 1).duration + 2 * 480
+        P.Tasks(I).Duration = P.Tasks(I - 1).Duration + 2 * 240
     Next I
     
     N = 2
     For I = 11 To 15
-        P.Tasks(I).duration = (((N * (N - 1)) / 2) + 1) * 480
+        P.Tasks(I).Duration = (((N * (N - 1)) / 2) + 1) * 240
         N = N + 1
     Next I
     
     j = 0
     For I = 16 To 20
-        P.Tasks(I).duration = (2 ^ j) * 480
+        P.Tasks(I).Duration = (2 ^ j) * 240
         j = j + 1
     Next I
 End Sub
@@ -288,22 +300,18 @@ Sub SetResources(P As Project)
         TaskName = P.Tasks(T).name
         
         If TaskName = "C3" Or TaskName = "C4" Or TaskName = "C5" Or TaskName = "E4" Or TaskName = "E5" Then
-            P.Tasks(T).ResourceNames = P.resources(1).name
+            P.Tasks(T).ResourceNames = P.Resources(1).name
         End If
         
         If TaskName Like "V*" Or TaskName Like "L*" Then
-            P.Tasks(T).ResourceNames = P.resources(4).name
+            P.Tasks(T).ResourceNames = P.Resources(4).name
         End If
+        
+        P.Tasks(T).ResourceNames = CStr(P.Resources(6).name) & ";" & CStr(P.Tasks(T).ResourceNames)
     Next T
     
 End Sub
 
-
-Sub CalculateCosts(P As Project)
-    For I = 1 To P.Tasks.Count
-        P.Tasks(I).Cost1 = P.Tasks(I).Cost
-    Next I
-End Sub
 
 
 Sub exportInfoOneToExcel(P As Project)
@@ -325,17 +333,17 @@ Sub exportInfoOneToExcel(P As Project)
     Set R = L.ActiveSheet.Range("B1")
     R = "Start(date)"
     Set R = L.ActiveSheet.Range("B2")
-    R = P.Tasks(1).start
+    R = P.Tasks(1).Start
     
     Set R = L.ActiveSheet.Range("C1")
     R = "Finish(date)"
     Set R = L.ActiveSheet.Range("C2")
-    R = P.Tasks(1).finish
+    R = P.Tasks(1).Finish
     
     Set R = L.ActiveSheet.Range("D1")
     R = "Duration(days)"
     Set R = L.ActiveSheet.Range("D2")
-    R = P.Tasks(1).duration / 480
+    R = P.Tasks(1).Duration / 240
     
     Set R = L.ActiveSheet.Range("E1")
     
@@ -344,12 +352,12 @@ Sub exportInfoOneToExcel(P As Project)
 
     custo = 0
     For I = 2 To P.Tasks.Count
-        custo = custo + P.Tasks(I).Cost1
+        custo = custo + P.Tasks(I).Cost
     Next I
     R = custo
     
     Set R = L.ActiveSheet.Range("F1")
-    R = "Costs for student(euros)"
+    R = "Received from the student(euros)"
     Set R = L.ActiveSheet.Range("F2")
     R = 200 + P.Tasks.Count - 1 * 5
     
@@ -409,7 +417,7 @@ Sub exportInfoToExcel(nrAlunos As Integer, nrModules() As Integer, nome() As Str
     Next I
 
     Set R = L.ActiveSheet.Range("F1")
-    R = "Costs for student(euros)"
+    R = "Received from the student(euros)"
     
     For I = 2 To nrAlunos + 1
         Set R = L.ActiveSheet.Range("F" & CStr(I))
@@ -417,6 +425,9 @@ Sub exportInfoToExcel(nrAlunos As Integer, nrModules() As Integer, nome() As Str
     Next I
     
 End Sub
+
+
+
 
 
 
