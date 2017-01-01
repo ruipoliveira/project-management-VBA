@@ -2,29 +2,31 @@
 ' Project Management and Entrepreneurship (GPE)
 ' 2016,  University of Aveiro
 ' Diogo Cunha
-' Rui Oliveira ruipedrooliveira@ua.pt
-
-
-Public Const NR_STUDENTS = 20
+' Rui Oliveira
 
 
 Sub main_ex2_1()
 
-    Dim name_arr(NR_STUDENTS - 1) As String
-    Dim start_arr(NR_STUDENTS - 1) As String
-    Dim finish_arr(NR_STUDENTS - 1) As String
-    Dim duration_arr(NR_STUDENTS - 1) As String
-    Dim costs_arr(NR_STUDENTS - 1) As String
-    Dim nrModules_arr(NR_STUDENTS - 1) As Integer
+    myValue = InputBox("Numero de estudantes maximo")
+    Dim NR_STUDENTS As Integer
+    
+    NR_STUDENTS = CInt(myValue)
+    
+    ReDim name_arr(NR_STUDENTS - 1) As String
+    ReDim start_arr(NR_STUDENTS - 1) As String
+    ReDim finish_arr(NR_STUDENTS - 1) As String
+    ReDim duration_arr(NR_STUDENTS - 1) As String
+    ReDim costs_arr(NR_STUDENTS - 1) As String
+    ReDim nrModules_arr(NR_STUDENTS - 1) As Integer
     
     For I = 1 To NR_STUDENTS
         Dim P As Project
         Call generateForStudent(P, "Student_" & I)
         
         name_arr(I - 1) = P.Tasks(1).name
-        start_arr(I - 1) = P.Tasks(1).Start
-        finish_arr(I - 1) = P.Tasks(1).Finish
-        duration_arr(I - 1) = P.Tasks(1).Duration / 240
+        start_arr(I - 1) = P.Tasks(1).start
+        finish_arr(I - 1) = P.Tasks(1).finish
+        duration_arr(I - 1) = P.Tasks(1).duration / 240
         nrModules_arr(I - 1) = P.Tasks.Count - 1
         
         costTask = 0
@@ -42,7 +44,7 @@ End Sub
 Sub main_ex2()
     Dim P As Project
     Call generateForStudent(P, "Adam Smith")
-    'Call exportInfoOneToExcel(P)
+    Call exportInfoOneToExcel(P)
 
 End Sub
 
@@ -84,7 +86,7 @@ Sub randomActivities(P As Project)
     cont = 1
     For I = V To 5
         P.Tasks.Add name:=Chr(86) & Chr(48 + I)
-        P.Tasks(cont).Duration = durations(-1 + I)
+        P.Tasks(cont).duration = durations(-1 + I)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
         cont = cont + 1
@@ -94,14 +96,14 @@ Sub randomActivities(P As Project)
     
     If C = 5 Then
         P.Tasks.Add name:="C4"
-        P.Tasks(cont).Duration = durations(7)
+        P.Tasks(cont).duration = durations(7)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
     End If
     
     For I = C To 5
         P.Tasks.Add name:=Chr(67) & Chr(48 + I)
-        P.Tasks(cont).Duration = durations(4 + I)
+        P.Tasks(cont).duration = durations(4 + I)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
         cont = cont + 1
@@ -110,7 +112,7 @@ Sub randomActivities(P As Project)
     L = Int((5 - 1 + 1) * Rnd() + 1)
     For I = L To 5
         P.Tasks.Add name:=Chr(76) & Chr(48 + I)
-        P.Tasks(cont).Duration = durations(9 + I)
+        P.Tasks(cont).duration = durations(9 + I)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
         cont = cont + 1
@@ -120,7 +122,7 @@ Sub randomActivities(P As Project)
     
     If E = 5 Then
         P.Tasks.Add name:="E4"
-        P.Tasks(cont).Duration = durations(17)
+        P.Tasks(cont).duration = durations(17)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
     End If
@@ -128,7 +130,7 @@ Sub randomActivities(P As Project)
     
     For I = E To 5
         P.Tasks.Add name:=Chr(69) & Chr(48 + I)
-        P.Tasks(cont).Duration = durations(14 + I)
+        P.Tasks(cont).duration = durations(14 + I)
         P.Tasks(cont).Estimated = 0
         P.Tasks(cont).Manual = 0
         cont = cont + 1
@@ -228,25 +230,25 @@ Sub totalActivitiesDuration()
         P.Tasks(I).Manual = 0
     Next I
     
-    P.Tasks(1).Duration = 32 * 240
+    P.Tasks(1).duration = 32 * 240
     For I = 2 To 5
-        P.Tasks(I).Duration = P.Tasks(I - 1).Duration / 2
+        P.Tasks(I).duration = P.Tasks(I - 1).duration / 2
     Next I
     
-    P.Tasks(6).Duration = 3 * 240
+    P.Tasks(6).duration = 3 * 240
     For I = 7 To 10
-        P.Tasks(I).Duration = P.Tasks(I - 1).Duration + 2 * 240
+        P.Tasks(I).duration = P.Tasks(I - 1).duration + 2 * 240
     Next I
     
     N = 2
     For I = 11 To 15
-        P.Tasks(I).Duration = (((N * (N - 1)) / 2) + 1) * 240
+        P.Tasks(I).duration = (((N * (N - 1)) / 2) + 1) * 240
         N = N + 1
     Next I
     
     j = 0
     For I = 16 To 20
-        P.Tasks(I).Duration = (2 ^ j) * 240
+        P.Tasks(I).duration = (2 ^ j) * 240
         j = j + 1
     Next I
 End Sub
@@ -300,14 +302,13 @@ Sub SetResources(P As Project)
         TaskName = P.Tasks(T).name
         
         If TaskName = "C3" Or TaskName = "C4" Or TaskName = "C5" Or TaskName = "E4" Or TaskName = "E5" Then
-            P.Tasks(T).ResourceNames = P.Resources(1).name
+            P.Tasks(T).ResourceNames = P.resources(1).name
         End If
         
         If TaskName Like "V*" Or TaskName Like "L*" Then
-            P.Tasks(T).ResourceNames = P.Resources(4).name
+            P.Tasks(T).ResourceNames = P.resources(4).name
         End If
         
-        P.Tasks(T).ResourceNames = CStr(P.Resources(6).name) & ";" & CStr(P.Tasks(T).ResourceNames)
     Next T
     
 End Sub
@@ -333,17 +334,17 @@ Sub exportInfoOneToExcel(P As Project)
     Set R = L.ActiveSheet.Range("B1")
     R = "Start(date)"
     Set R = L.ActiveSheet.Range("B2")
-    R = P.Tasks(1).Start
+    R = P.Tasks(1).start
     
     Set R = L.ActiveSheet.Range("C1")
     R = "Finish(date)"
     Set R = L.ActiveSheet.Range("C2")
-    R = P.Tasks(1).Finish
+    R = P.Tasks(1).finish
     
     Set R = L.ActiveSheet.Range("D1")
     R = "Duration(days)"
     Set R = L.ActiveSheet.Range("D2")
-    R = P.Tasks(1).Duration / 240
+    R = P.Tasks(1).duration / 240
     
     Set R = L.ActiveSheet.Range("E1")
     
@@ -425,9 +426,4 @@ Sub exportInfoToExcel(nrAlunos As Integer, nrModules() As Integer, nome() As Str
     Next I
     
 End Sub
-
-
-
-
-
 
